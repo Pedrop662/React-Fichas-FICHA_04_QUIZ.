@@ -17,6 +17,12 @@ const localQuestions = [
         correctAnswer: "4",
         incorrectAnswers: ["3", "5", "22"],
     },
+    {
+        id: "3",
+        question: "Qual linguagem usamos no React?",
+        correctAnswer: "JavaScript",
+        incorrectAnswers: ["Python", "C", "Java"],
+    },
 ];
 
 const QUESTION_TIME_LIMIT = 15;
