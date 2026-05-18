@@ -156,7 +156,7 @@ function App() {
     };
 
     return (
-        <div className="quiz-card">
+        <div className={`quiz-card question-color-${currentQuestionIndex}`}>
 
             {/* Ecrã inicial */}
             {gameStatus === "idle" && (
