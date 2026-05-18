@@ -1,21 +1,21 @@
 const QUESTION_TIME_LIMIT = 15;
 
 /**
- * Mostra o tempo restante.
+ * Propósito:
+ * Mostrar o tempo restante da pergunta.
  */
+
 function TimerBar({ timeLeft }) {
     const percentage = (timeLeft / QUESTION_TIME_LIMIT) * 100;
 
     return (
-        <div>
-            <p>{timeLeft}s</p>
-            <div style={{ width: "100%", background: "#ccc" }}>
+        <div className="timer">
+            <p>Tempo restante: {timeLeft}s</p>
+
+            <div className="timer-bar">
                 <div
-                    style={{
-                        width: `${percentage}%`,
-                        height: "10px",
-                        background: "green",
-                    }}
+                    className="timer-bar__fill"
+                    style={{ width: `${percentage}%` }}
                 />
             </div>
         </div>

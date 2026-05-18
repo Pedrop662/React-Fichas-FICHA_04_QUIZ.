@@ -1,16 +1,32 @@
 /**
- * Ecrã final com resultado.
+ * Propósito:
+ * Mostrar o resultado final do jogo.
+ *
+ * Produz/Devolve:
+ * Pontuação final, percentagem e opção de reiniciar.
  */
+
 function ResultScreen({ playerName, stats, onReset }) {
     return (
-        <section>
-            <h2>Resultado</h2>
+        <section className="quiz-card">
+            <h2>
+                {stats.victory
+                    ? "🎉 Parabéns!"
+                    : "😅 Tenta novamente"}
+            </h2>
 
-            <p>{playerName}</p>
+            <p>Jogador: {playerName}</p>
             <p>Pontuação: {stats.score}</p>
-            <p>Certas: {stats.correctAnswers}</p>
+            <p>
+                Certas: {stats.correctAnswers} de {stats.totalQuestions}
+            </p>
+            <p>Percentagem: {stats.percentage}%</p>
 
-            <button onClick={onReset}>
+            <button
+                type="button"
+                className="button-primary"
+                onClick={onReset}
+            >
                 Jogar outra vez
             </button>
         </section>
