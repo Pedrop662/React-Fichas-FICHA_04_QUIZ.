@@ -26,13 +26,14 @@ const localQuestions = [
 ];
 
 const QUESTION_TIME_LIMIT = 15;
+const POINTS_PER_QUESTION = 100;
 
 /**
  * App principal do Quiz
  * Controla todo o estado do jogo
  */
 function App() {
-    const [gameStatus, setGameStatus] = useState("idle"); 
+    const [gameStatus, setGameStatus] = useState("idle");
     const [questions, setQuestions] = useState(localQuestions);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(QUESTION_TIME_LIMIT);
@@ -44,7 +45,17 @@ function App() {
     const currentQuestion = questions[currentQuestionIndex];
 
     /**
+     * Calcula percentagem final
+     */
+    const finalPercentage = useMemo(() => {
+        return questions.length === 0
+            ? 0
+            : (score / (questions.length * POINTS_PER_QUESTION)) * 100;
+    }, [score, questions.length]);
+
+    /**
      * Baralha respostas
+     * useMemo evita mudanças constantes
      */
     const currentAnswers = useMemo(() => {
         if (!currentQuestion) return [];
@@ -56,7 +67,7 @@ function App() {
     }, [currentQuestion]);
 
     /**
-     * Temporizador
+     * Temporizador do jogo
      */
     useEffect(() => {
         if (gameStatus !== "playing") return;
@@ -66,7 +77,9 @@ function App() {
             setTimeLeft((prev) => prev - 1);
         }, 1000);
 
-        return () => clearTimeout(timeoutId);
+        return () => {
+            clearTimeout(timeoutId);
+        };
     }, [gameStatus, timeLeft]);
 
     /**
@@ -76,14 +89,14 @@ function App() {
         if (!currentQuestion) return;
 
         if (answer === currentQuestion.correctAnswer) {
-            setScore((s) => s + 1);
+            setScore((prev) => prev + POINTS_PER_QUESTION);
         }
 
         goToNextQuestion();
     };
 
     /**
-     * Avançar pergunta
+     * Avança para próxima pergunta
      */
     const goToNextQuestion = () => {
         const nextIndex = currentQuestionIndex + 1;
@@ -98,37 +111,40 @@ function App() {
     };
 
     /**
-     * Timeout
+     * Timeout da pergunta
      */
     const handleTimeout = () => {
         goToNextQuestion();
     };
 
     /**
-     * Começar jogo (simulação API futura)
+     * Começar jogo
      */
     const startGame = async () => {
         setLoading(true);
         setError("");
-        setGameStatus("playing");
 
         try {
-            // aqui futuramente entra API
+            // Futuramente aqui entra API
             setQuestions(localQuestions);
+
+            setCurrentQuestionIndex(0);
+            setScore(0);
+            setTimeLeft(QUESTION_TIME_LIMIT);
+
+            setGameStatus("playing");
         } catch (err) {
             setError("Erro ao carregar perguntas");
             setQuestions(localQuestions);
+
+            setGameStatus("playing");
         } finally {
             setLoading(false);
         }
-
-        setCurrentQuestionIndex(0);
-        setScore(0);
-        setTimeLeft(QUESTION_TIME_LIMIT);
     };
 
     /**
-     * Reset jogo
+     * Reset do jogo
      */
     const resetGame = () => {
         setGameStatus("idle");
@@ -142,15 +158,16 @@ function App() {
     return (
         <div className="quiz-card">
 
-            {/* IDLE */}
+            {/* Ecrã inicial */}
             {gameStatus === "idle" && (
                 <div>
                     <h1>Quiz App</h1>
 
                     <input
+                        type="text"
+                        placeholder="Nome"
                         value={playerName}
                         onChange={(e) => setPlayerName(e.target.value)}
-                        placeholder="Nome"
                     />
 
                     <button
@@ -162,30 +179,32 @@ function App() {
                 </div>
             )}
 
-            {/* LOADING */}
+            {/* Loading */}
             {loading && (
                 <p>A carregar perguntas...</p>
             )}
 
-            {/* ERROR */}
+            {/* Erro */}
             {error && (
-                <p style={{ color: "red" }}>{error}</p>
+                <p style={{ color: "red" }}>
+                    {error}
+                </p>
             )}
 
-            {/* PLAYING */}
+            {/* Jogo */}
             {gameStatus === "playing" && currentQuestion && !loading && (
                 <div>
                     <p>Tempo restante: {timeLeft}s</p>
 
                     <h2>{currentQuestion.question}</h2>
 
-                    {currentAnswers.map((a) => (
+                    {currentAnswers.map((answer) => (
                         <button
-                            key={a}
-                            onClick={() => handleAnswer(a)}
+                            key={answer}
+                            onClick={() => handleAnswer(answer)}
                             disabled={timeLeft === 0}
                         >
-                            {a}
+                            {answer}
                         </button>
                     ))}
 
@@ -197,13 +216,20 @@ function App() {
                 </div>
             )}
 
-            {/* FINISHED */}
+            {/* Resultado final */}
             {gameStatus === "finished" && (
                 <div>
                     <h2>Fim do jogo</h2>
 
                     <p>Jogador: {playerName}</p>
-                    <p>Pontuação: {score}</p>
+
+                    <p>
+                        Pontuação: {score}
+                    </p>
+
+                    <p>
+                        Percentagem: {finalPercentage.toFixed(0)}%
+                    </p>
 
                     <button onClick={resetGame}>
                         Recomeçar
