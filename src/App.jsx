@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./index.css";
 
 /**
- * Perguntas locais (fallback).
- * Usadas quando a API falha.
+ * Perguntas locais (fallback caso API falhe)
  */
 const localQuestions = [
     {
@@ -22,18 +21,24 @@ const localQuestions = [
 
 const QUESTION_TIME_LIMIT = 15;
 
+/**
+ * App principal do Quiz
+ * Controla todo o estado do jogo
+ */
 function App() {
-    const [gameStatus, setGameStatus] = useState("idle"); // idle | playing | finished
+    const [gameStatus, setGameStatus] = useState("idle"); 
+    const [questions, setQuestions] = useState(localQuestions);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(QUESTION_TIME_LIMIT);
     const [score, setScore] = useState(0);
     const [playerName, setPlayerName] = useState("");
-    const [difficulty, setDifficulty] = useState("easy");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const currentQuestion = localQuestions[currentQuestionIndex];
+    const currentQuestion = questions[currentQuestionIndex];
 
     /**
-     * Baralha respostas (useMemo evita mudanças a cada render)
+     * Baralha respostas
      */
     const currentAnswers = useMemo(() => {
         if (!currentQuestion) return [];
@@ -45,7 +50,7 @@ function App() {
     }, [currentQuestion]);
 
     /**
-     * Temporizador do jogo
+     * Temporizador
      */
     useEffect(() => {
         if (gameStatus !== "playing") return;
@@ -62,6 +67,8 @@ function App() {
      * Responder pergunta
      */
     const handleAnswer = (answer) => {
+        if (!currentQuestion) return;
+
         if (answer === currentQuestion.correctAnswer) {
             setScore((s) => s + 1);
         }
@@ -75,7 +82,7 @@ function App() {
     const goToNextQuestion = () => {
         const nextIndex = currentQuestionIndex + 1;
 
-        if (nextIndex >= localQuestions.length) {
+        if (nextIndex >= questions.length) {
             setGameStatus("finished");
             return;
         }
@@ -85,26 +92,51 @@ function App() {
     };
 
     /**
-     * Começar jogo
+     * Timeout
      */
-    const startGame = () => {
+    const handleTimeout = () => {
+        goToNextQuestion();
+    };
+
+    /**
+     * Começar jogo (simulação API futura)
+     */
+    const startGame = async () => {
+        setLoading(true);
+        setError("");
         setGameStatus("playing");
+
+        try {
+            // aqui futuramente entra API
+            setQuestions(localQuestions);
+        } catch (err) {
+            setError("Erro ao carregar perguntas");
+            setQuestions(localQuestions);
+        } finally {
+            setLoading(false);
+        }
+
         setCurrentQuestionIndex(0);
         setScore(0);
         setTimeLeft(QUESTION_TIME_LIMIT);
     };
 
     /**
-     * Reset
+     * Reset jogo
      */
     const resetGame = () => {
         setGameStatus("idle");
         setScore(0);
         setCurrentQuestionIndex(0);
+        setPlayerName("");
+        setTimeLeft(QUESTION_TIME_LIMIT);
+        setError("");
     };
 
     return (
         <div className="quiz-card">
+
+            {/* IDLE */}
             {gameStatus === "idle" && (
                 <div>
                     <h1>Quiz App</h1>
@@ -124,26 +156,52 @@ function App() {
                 </div>
             )}
 
-            {gameStatus === "playing" && (
+            {/* LOADING */}
+            {loading && (
+                <p>A carregar perguntas...</p>
+            )}
+
+            {/* ERROR */}
+            {error && (
+                <p style={{ color: "red" }}>{error}</p>
+            )}
+
+            {/* PLAYING */}
+            {gameStatus === "playing" && currentQuestion && !loading && (
                 <div>
                     <p>Tempo restante: {timeLeft}s</p>
 
                     <h2>{currentQuestion.question}</h2>
 
                     {currentAnswers.map((a) => (
-                        <button key={a} onClick={() => handleAnswer(a)}>
+                        <button
+                            key={a}
+                            onClick={() => handleAnswer(a)}
+                            disabled={timeLeft === 0}
+                        >
                             {a}
                         </button>
                     ))}
+
+                    {timeLeft === 0 && (
+                        <button onClick={handleTimeout}>
+                            Avançar
+                        </button>
+                    )}
                 </div>
             )}
 
+            {/* FINISHED */}
             {gameStatus === "finished" && (
                 <div>
                     <h2>Fim do jogo</h2>
+
+                    <p>Jogador: {playerName}</p>
                     <p>Pontuação: {score}</p>
 
-                    <button onClick={resetGame}>Recomeçar</button>
+                    <button onClick={resetGame}>
+                        Recomeçar
+                    </button>
                 </div>
             )}
         </div>
